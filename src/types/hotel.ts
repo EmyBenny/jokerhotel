@@ -35,6 +35,29 @@ export interface HotelAmenity {
   description: string;
   hours: string;
   flyerDepartment: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+export type InquiryCategory =
+  | 'Joker Kitchen (24/7) Takeout & Delivery'
+  | 'Gym Membership'
+  | 'Event & Meeting Hall'
+  | 'Celebration Dinner'
+  | 'Photo Shoot Session'
+  | 'Gold Room Lounge VIP'
+  | 'Supermarket Concierge';
+
+export interface ServiceInquiry {
+  id: string;
+  reference: string;
+  category: InquiryCategory;
+  guestName: string;
+  guestPhone: string;
+  preferredDate: string;
+  details: string;
+  status: 'new' | 'replied' | 'confirmed';
+  createdAt: string;
 }
 
 export interface Reservation {
@@ -128,6 +151,7 @@ export interface HotelProfile {
   location: string;
   address: string;
   whatsappPhone: string;
+  replyPhone: string;
   email: string;
   flyerImageUrl: string;
   checkInTime: string;

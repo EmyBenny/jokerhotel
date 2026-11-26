@@ -22,6 +22,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.smart-gold-canvas {
+  background-color: #e8cd7e;
+  background-image:
+    radial-gradient(1200px 620px at 12% 0%, rgba(255, 248, 222, 0.72), transparent 62%),
+    radial-gradient(960px 540px at 88% 12%, rgba(212, 165, 42, 0.34), transparent 64%),
+    linear-gradient(165deg, #f5e6b8 0%, #e8cd7e 48%, #d9b658 100%);
+}
+
+html.dark .smart-gold-canvas {
+  background-color: #120e06;
+  background-image:
+    radial-gradient(1000px 520px at 15% 0%, rgba(212, 175, 55, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 85% 18%, rgba(168, 122, 18, 0.12), transparent 62%),
+    linear-gradient(170deg, #161107 0%, #110d05 55%, #0c0904 100%);
+}
+
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

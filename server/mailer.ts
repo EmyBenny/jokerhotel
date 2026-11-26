@@ -48,7 +48,7 @@ export async function dispatchConfirmationEmail(
     '',
     `CONCIERGE & ARRIVAL`,
     `Address: ${profile.address}`,
-    `WhatsApp / Direct Concierge: ${profile.whatsappPhone}`,
+    `Immediate Reply Line: ${profile.replyPhone || '0905 048 3402'} · WhatsApp: ${profile.whatsappPhone}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -56,13 +56,13 @@ export async function dispatchConfirmationEmail(
   const bodyHtml = `
     <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;max-width:600px;margin:0 auto;background:#F7F5F0;color:#14120F;border:1px solid #E5DFD3;">
       <div style="background:#100F0D;padding:28px 32px;color:#F7F5F0;">
-        <p style="margin:0;font-size:12px;letter-spacing:0.14em;color:#D4AF37;text-transform:uppercase;">Benin City, Edo</p>
+        <p style="margin:0;font-size:12px;letter-spacing:0.14em;color:#D4AF37;text-transform:uppercase;">${escapeHtml(profile.address)}</p>
         <h1 style="margin:6px 0 0;font-family:Georgia,serif;font-size:26px;font-weight:600;color:#FFFFFF;">${escapeHtml(profile.name)}</h1>
       </div>
       <div style="padding:28px 32px;background:#FFFFFF;">
         <p style="margin:0 0 8px;font-size:13px;color:#6E675C;">Booking Reference</p>
         <p style="margin:0 0 20px;font-family:monospace;font-size:20px;font-weight:700;color:#14120F;">${escapeHtml(reservation.bookingRef)}</p>
-        <p style="margin:0 0 18px;font-size:15px;line-height:1.6;">Dear ${escapeHtml(reservation.guestName)}, your stay in Benin City is confirmed. Below is your official confirmation and payment receipt.</p>
+        <p style="margin:0 0 18px;font-size:15px;line-height:1.6;">Dear ${escapeHtml(reservation.guestName)}, your stay in Benin City is confirmed (Free Breakfast included). Below is your official confirmation and payment receipt.</p>
         <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;">
           <tr><td style="padding:8px 0;border-bottom:1px solid #EEE9DF;color:#6E675C;">Suite</td><td style="padding:8px 0;border-bottom:1px solid #EEE9DF;text-align:right;font-weight:600;">${escapeHtml(reservation.roomName)}</td></tr>
           <tr><td style="padding:8px 0;border-bottom:1px solid #EEE9DF;color:#6E675C;">Check-In</td><td style="padding:8px 0;border-bottom:1px solid #EEE9DF;text-align:right;">${escapeHtml(reservation.checkIn)} · ${escapeHtml(profile.checkInTime)}</td></tr>
@@ -71,7 +71,7 @@ export async function dispatchConfirmationEmail(
           <tr><td style="padding:12px 0;font-weight:700;font-size:16px;">Total Paid</td><td style="padding:12px 0;text-align:right;font-weight:700;font-size:16px;color:#9A6E08;">${escapeHtml(formatNgn(reservation.totalPaidNgn))}</td></tr>
         </table>
         <p style="margin:16px 0 0;font-size:13px;color:#554F46;">Joker Royal Club Points Earned: <strong>+${reservation.pointsEarned} pts</strong></p>
-        <p style="margin:12px 0 0;font-size:13px;color:#554F46;">For chauffeur pickup or Continental Lounge reservations, message our WhatsApp desk on <strong>${escapeHtml(profile.whatsappPhone)}</strong>.</p>
+        <p style="margin:12px 0 0;font-size:13px;color:#554F46;">For immediate reply call <strong>${escapeHtml(profile.replyPhone || '0905 048 3402')}</strong> or message WhatsApp <strong>${escapeHtml(profile.whatsappPhone)}</strong>.</p>
       </div>
     </div>
   `.trim();

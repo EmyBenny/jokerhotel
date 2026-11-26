@@ -12,6 +12,7 @@ import type {
   Reservation,
   RoomCategory,
   SeasonalPromotion,
+  ServiceInquiry,
 } from '../src/types/hotel.ts';
 
 export interface AdminCredential {
@@ -25,6 +26,7 @@ export interface HotelDatabase {
   rooms: RoomCategory[];
   amenities: HotelAmenity[];
   reservations: Reservation[];
+  inquiries: ServiceInquiry[];
   emailLogs: EmailLog[];
   loyaltyAccounts: LoyaltyAccount[];
   promotions: SeasonalPromotion[];
@@ -58,8 +60,9 @@ function createInitialDb(): HotelDatabase {
     profile: {
       name: 'Joker Hotel & Suites',
       location: 'Benin City, Edo',
-      address: 'GRA Executive Boulevard, Benin City, Edo State, Nigeria',
+      address: 'Godwin Abbey Way (Limit Rd), Benin City, Edo State',
       whatsappPhone: '0905 048 3401',
+      replyPhone: '0905 048 3402',
       email: 'reservations@jokerhotelsuites.com',
       flyerImageUrl: '/assets/aistudio/WhatsApp_Image_2026-11-26_at_4.34.50_AM_a7eab22c.jpeg',
       checkInTime: '14:00 WAT',
@@ -190,60 +193,90 @@ function createInitialDb(): HotelDatabase {
     ],
     amenities: [
       {
-        id: 'amen-dining',
-        title: 'Continental & Local Fine Dining',
-        category: 'Culinary',
+        id: 'amen-rooms-breakfast',
+        title: 'Luxury Rooms + Free Breakfast',
+        category: 'Accommodation',
         description:
-          'Curated continental breakfasts, grill plates, and traditional Edo delicacies prepared fresh daily by our Continental Chef and culinary brigade.',
-        hours: '06:30 – 23:00 Daily',
-        flyerDepartment: 'Continental Chef & Cooks',
+          'Five luxury suite tiers with 24/7 uninterrupted power, fiber Wi-Fi, and complimentary daily continental & local breakfast.',
+        hours: 'Breakfast 06:30 – 10:30',
+        flyerDepartment: 'Housekeeping & Breakfast Culinary Team',
+        imageUrl: '/src/assets/images/room_joker_lounge_suite_1795697386718.jpg',
       },
       {
-        id: 'amen-lounge',
-        title: 'Joker Evening Lounge & Bar',
-        category: 'Lounge & F&B',
+        id: 'amen-gym-pool',
+        title: '24/7 Gym & Swimming · Gym Memberships',
+        category: 'Wellness & Fitness',
         description:
-          'Signature warm-lit leather lounge serving aged spirits, craft cocktails, and small plates with attentive table service.',
+          'Floodlit resort swimming pool and 24-hour fitness studio open to in-house guests and monthly Gym Membership subscribers.',
+        hours: '24/7 Open Access',
+        flyerDepartment: 'Wellness & Pool Operations',
+        imageUrl: '/src/assets/images/facility_pool_gym_1795699580653.jpg',
+        videoUrl: '/videos/joker-gym-pool-tour.mp4',
+      },
+      {
+        id: 'amen-gold-lounge',
+        title: 'Gold Room Lounge',
+        category: 'VIP Nightlife',
+        description:
+          'Signature warm-lit leather and brass lounge pouring aged spirits, craft cocktails, and curated platters with attentive table service.',
         hours: '16:00 – 02:00 Daily',
-        flyerDepartment: 'F&B Supervisor & Wait Staff',
+        flyerDepartment: 'F&B Supervisor & Bar Staff',
+        imageUrl: '/src/assets/images/facility_gold_lounge_1795699570355.jpg',
+        videoUrl: '/videos/joker-gold-lounge.mp4',
       },
       {
-        id: 'amen-chauffeur',
-        title: 'Chauffeur & Airport Shuttle',
-        category: 'Transport',
+        id: 'amen-events-dinners',
+        title: 'Event & Meeting Halls · Celebration Dinners',
+        category: 'Events & Dining',
         description:
-          'Punctual Benin Airport pickups and executive city transfers operated by vetted, experienced hotel drivers.',
-        hours: '24/7 On Request',
-        flyerDepartment: 'Experienced Drivers',
+          'Acoustically equipped banquet halls, corporate conference suites, and private candlelit setups for milestone Celebration Dinners.',
+        hours: '07:00 – 00:00 By Booking',
+        flyerDepartment: 'Events Team & Continental Chef',
+        imageUrl: '/src/assets/images/facility_event_hall_1795699570632.jpg',
+        videoUrl: '/videos/joker-events-celebrations.mp4',
       },
       {
-        id: 'amen-security',
-        title: '24/7 Uniformed Security & CCTV',
-        category: 'Safety',
+        id: 'amen-joker-kitchen',
+        title: 'Joker Kitchen (24/7) – Takeout & Delivery',
+        category: 'Culinary 24/7',
         description:
-          'Round-the-clock perimeter access control, monitored CCTV coverage, and trained on-site security personnel.',
+          'Round-the-clock Local & Intercontinental dishes cooked fresh to order for suite service, quick takeout, or Benin City doorstep delivery.',
+        hours: '24/7 Kitchen & Dispatch',
+        flyerDepartment: 'Continental Chef, Cooks & Riders',
+        imageUrl: '/src/assets/images/facility_joker_kitchen_1795699569853.jpg',
+        videoUrl: '/videos/joker-kitchen-24-7.mp4',
+      },
+      {
+        id: 'amen-supermarket',
+        title: 'On-Site Supermarket',
+        category: 'Retail Mart',
+        description:
+          'Well-stocked hospitality convenience mart with chilled beverages, imported snacks, toiletries, wines, and everyday travel essentials.',
+        hours: '07:00 – 23:30 Daily',
+        flyerDepartment: 'Storekeeper & Retail Cashier',
+        imageUrl: '/src/assets/images/facility_supermarket_mart_1795699569847.jpg',
+      },
+      {
+        id: 'amen-photoshoots',
+        title: 'Photo Shoots & Editorial Locations',
+        category: 'Media Studio',
+        description:
+          'Bookable architectural backdrops, golden-hour poolside decks, and private suite sets for bridal, fashion, and brand photo shoots.',
+        hours: '08:00 – 20:00 Daily',
+        flyerDepartment: 'Social Media & Guest Relations',
+        imageUrl: '/src/assets/images/facility_photoshoot_studio_1795699571078.jpg',
+      },
+      {
+        id: 'amen-chauffeur-security',
+        title: 'Chauffeur Shuttle & 24/7 Security',
+        category: 'Transport & Safety',
+        description:
+          'Benin Airport pickups with experienced drivers, monitored CCTV perimeter, and round-the-clock uniformed security personnel.',
         hours: '24/7 Continuous',
-        flyerDepartment: 'Security Personnel',
-      },
-      {
-        id: 'amen-concierge',
-        title: 'Digital Reservations & Concierge',
-        category: 'Guest Services',
-        description:
-          'Instant online booking confirmation, itemized corporate invoicing, and WhatsApp concierge support on 0905 048 3401.',
-        hours: '24/7 Live Desk',
-        flyerDepartment: 'Online Reservations & Accounts',
-      },
-      {
-        id: 'amen-housekeeping',
-        title: 'Express Room Service & Care',
-        category: 'In-Room',
-        description:
-          'Twice-daily housekeeping, turndown amenities, and 24-hour in-room dining delivered directly to your suite.',
-        hours: '24/7 Service',
-        flyerDepartment: 'Hospitality & Storekeeping',
+        flyerDepartment: 'Experienced Drivers & Security Personnel',
       },
     ],
+    inquiries: [],
     reservations: [
       {
         id: 'res-seed-1',
@@ -440,7 +473,31 @@ export function loadDb(): HotelDatabase {
     }
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
-      cachedDb = JSON.parse(raw) as HotelDatabase;
+      const parsed = JSON.parse(raw) as HotelDatabase;
+      let migrated = false;
+      const defaults = createInitialDb();
+
+      if (!parsed.profile.replyPhone) {
+        parsed.profile.replyPhone = defaults.profile.replyPhone;
+        migrated = true;
+      }
+      if (!parsed.profile.address || parsed.profile.address.includes('GRA Executive Boulevard')) {
+        parsed.profile.address = defaults.profile.address;
+        migrated = true;
+      }
+      if (!Array.isArray(parsed.inquiries)) {
+        parsed.inquiries = [];
+        migrated = true;
+      }
+      if (!parsed.amenities?.some((a) => a.id === 'amen-joker-kitchen' && a.imageUrl)) {
+        parsed.amenities = defaults.amenities;
+        migrated = true;
+      }
+
+      cachedDb = parsed;
+      if (migrated) {
+        saveDb(cachedDb);
+      }
       return cachedDb;
     }
   } catch (err) {

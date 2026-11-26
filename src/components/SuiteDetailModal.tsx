@@ -39,8 +39,8 @@ export const SuiteDetailModal: React.FC<SuiteDetailModalProps> = ({
       aria-modal="true"
       aria-label={`${room.name} suite inspection`}
     >
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl border border-[#14120F]/10 bg-[#F7F5F0] text-[#14120F] shadow-2xl dark:border-white/10 dark:bg-[#171512] dark:text-[#F5F2EB] sm:rounded-2xl">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#100F0D]">
+      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl border border-[#7A5908]/25 bg-[#F5E6B8] text-[#161106] shadow-2xl dark:border-[#D4AF37]/25 dark:bg-[#191409] dark:text-[#F8ECCB] sm:rounded-2xl">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#141007]">
           <img
             src={room.imageUrl}
             alt={room.name}
@@ -66,33 +66,33 @@ export const SuiteDetailModal: React.FC<SuiteDetailModalProps> = ({
 
         <div className="grid gap-6 p-6 lg:grid-cols-12">
           <div className="space-y-5 lg:col-span-7">
-            <p className="text-sm leading-relaxed text-[#4A453D] dark:text-[#CFC8BC]">
+            <p className="text-sm leading-relaxed text-[#3E3010] dark:text-[#DECFA8]">
               {room.description}
             </p>
 
-            <div className="grid grid-cols-3 gap-3 border-y border-[#14120F]/10 py-4 text-xs dark:border-white/10">
+            <div className="grid grid-cols-3 gap-3 border-y border-[#7A5908]/20 py-4 text-xs dark:border-[#D4AF37]/20">
               <div className="flex items-center gap-2">
-                <BedDouble className="h-4 w-4 text-[#B8860B]" />
+                <BedDouble className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                 <span>{room.bedConfig}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-[#B8860B]" />
+                <Users className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                 <span>Up to {room.maxGuests} guests</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[#B8860B]" />
+                <ShieldCheck className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                 <span>24/7 Security</span>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-[#6E675C] dark:text-[#A9A195]">
+              <h3 className="text-xs font-semibold text-[#5F4A17] dark:text-[#CBB887]">
                 Included Privileges &amp; Amenities
               </h3>
               <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
                 {room.amenities.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-[#14120F] dark:text-[#EAE5DC]">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#B8860B]" />
+                  <li key={item} className="flex items-center gap-2 text-xs text-[#161106] dark:text-[#F5E7BA]">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#9A6E08] dark:text-[#D4AF37]" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -101,22 +101,22 @@ export const SuiteDetailModal: React.FC<SuiteDetailModalProps> = ({
           </div>
 
           <div className="lg:col-span-5">
-            <div className="rounded-xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#1E1B17]">
-              <div className="flex items-center justify-between border-b border-[#14120F]/10 pb-3 text-xs dark:border-white/10">
-                <span className="flex items-center gap-1.5 text-[#6E675C] dark:text-[#A9A195]">
+            <div className="rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#231C0E]">
+              <div className="flex items-center justify-between border-b border-[#7A5908]/15 pb-3 text-xs dark:border-[#D4AF37]/15">
+                <span className="flex items-center gap-1.5 text-[#5F4A17] dark:text-[#CBB887]">
                   <Calendar className="h-3.5 w-3.5" />
                   <span>
                     {formatDateShort(checkIn)} → {formatDateShort(checkOut)}
                   </span>
                 </span>
-                <span className={`tabular-nums font-medium ${isBookable ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                <span className={`tabular-nums font-medium ${isBookable ? 'text-emerald-800 dark:text-emerald-400' : 'text-red-800 dark:text-red-400'}`}>
                   {isBookable ? `${avail} available` : 'Unavailable'}
                 </span>
               </div>
 
               <div className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#6E675C] dark:text-[#A9A195]">
+                  <span className="text-[#5F4A17] dark:text-[#CBB887]">
                     {formatMoney(room.nightlyRateNgn, currency, ngnPerUsd)} × {nights}{' '}
                     {nights === 1 ? 'night' : 'nights'}
                   </span>
@@ -125,21 +125,21 @@ export const SuiteDetailModal: React.FC<SuiteDetailModalProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#6E675C] dark:text-[#A9A195]">Hospitality &amp; VAT (7.5%)</span>
+                  <span className="text-[#5F4A17] dark:text-[#CBB887]">Hospitality &amp; VAT (7.5%)</span>
                   <span className="tabular-nums font-medium">
                     {formatMoney(serviceFee, currency, ngnPerUsd)}
                   </span>
                 </div>
-                <div className="flex items-baseline justify-between border-t border-[#14120F]/10 pt-3 dark:border-white/10">
+                <div className="flex items-baseline justify-between border-t border-[#7A5908]/15 pt-3 dark:border-[#D4AF37]/15">
                   <span className="font-semibold">Estimated Stay Total</span>
-                  <span className="tabular-nums text-xl font-bold text-[#9A6E08] dark:text-[#D4AF37]">
+                  <span className="tabular-nums text-xl font-bold text-[#7D5604] dark:text-[#D4AF37]">
                     {formatMoney(total, currency, ngnPerUsd)}
                   </span>
                 </div>
               </div>
 
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-[#6E675C] dark:text-[#A9A195]">
-                <Award className="h-3.5 w-3.5 text-[#B8860B]" />
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-[#5F4A17] dark:text-[#CBB887]">
+                <Award className="h-3.5 w-3.5 text-[#9A6E08] dark:text-[#D4AF37]" />
                 <span>Earns +{pointsEstimate} Joker Royal Club points</span>
               </p>
 
@@ -147,7 +147,7 @@ export const SuiteDetailModal: React.FC<SuiteDetailModalProps> = ({
                 type="button"
                 disabled={!isBookable}
                 onClick={() => onReserve(room)}
-                className="mt-5 w-full rounded-lg bg-[#14120F] py-3 text-xs font-semibold text-white hover:bg-[#2C2822] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#D4AF37] dark:text-[#100F0D] dark:hover:bg-[#E0BE4C]"
+                className="mt-5 w-full rounded-lg bg-[#161106] py-3 text-xs font-semibold text-[#F9E7B2] hover:bg-[#2A200B] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#D4AF37] dark:text-[#141007] dark:hover:bg-[#E5C158]"
               >
                 {isBookable ? 'Proceed to Reserve Suite' : 'Currently Unavailable'}
               </button>

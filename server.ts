@@ -16,12 +16,24 @@ import {
 } from './server/store.ts';
 import { dispatchConfirmationEmail } from './server/mailer.ts';
 import type {
+  InquiryCategory,
   PaymentMethod,
   PushNotificationItem,
   Reservation,
   ReservationStatus,
   RoomStatus,
+  ServiceInquiry,
 } from './src/types/hotel.ts';
+
+const ALLOWED_INQUIRY_CATEGORIES: InquiryCategory[] = [
+  'Joker Kitchen (24/7) Takeout & Delivery',
+  'Gym Membership',
+  'Event & Meeting Hall',
+  'Celebration Dinner',
+  'Photo Shoot Session',
+  'Gold Room Lounge VIP',
+  'Supermarket Concierge',
+];
 
 const PORT = Number(process.env.PORT || 3000);
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
@@ -115,7 +127,16 @@ async function startServer() {
   app.use(express.json({ limit: '1mb' }));
 
   const server = http.createServer(app);
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({ noServer: true });
+
+  server.on('upgrade', (req, socket, head) => {
+    const pathname = new URL(req.url || '/', 'http://localhost').pathname;
+    if (pathname === '/ws') {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit('connection', ws, req);
+      });
+    }
+  });
 
   function broadcastEvent(type: string, payload: unknown): void {
     const message = JSON.stringify({ type, payload, timestamp: new Date().toISOString() });
@@ -551,6 +572,52 @@ async function startServer() {
     res.json({ reminder });
   });
 
+  app.post('/api/inquiries', (req, res) => {
+    const db = loadDb();
+    const { category, guestName, guestPhone, preferredDate, details } = req.body as {
+      category?: string;
+      guestName?: string;
+      guestPhone?: string;
+      preferredDate?: string;
+      details?: string;
+    };
+
+    if (!category || !ALLOWED_INQUIRY_CATEGORIES.includes(category as InquiryCategory)) {
+      res.status(400).json({ error: 'Please select a valid hospitality service category.' });
+      return;
+    }
+    const cleanName = (guestName || '').trim().slice(0, 120);
+    const cleanPhone = (guestPhone || '').trim().slice(0, 40);
+    const cleanDate = (preferredDate || '').trim().slice(0, 32) || new Date().toISOString().slice(0, 10);
+    const cleanDetails = (details || '').trim().slice(0, 800);
+
+    if (cleanName.length < 2 || cleanPhone.replace(/\D/g, '').length < 7) {
+      res.status(400).json({ error: 'Your name and a valid phone number are required so our team can reply.' });
+      return;
+    }
+
+    const inquiry: ServiceInquiry = {
+      id: `inq-${crypto.randomUUID().slice(0, 8)}`,
+      reference: `INQ-${crypto.randomInt(100000, 999999)}`,
+      category: category as InquiryCategory,
+      guestName: cleanName,
+      guestPhone: cleanPhone,
+      preferredDate: cleanDate,
+      details: cleanDetails || `Requested ${category}`,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    };
+
+    db.inquiries.unshift(inquiry);
+    saveDb(db);
+    broadcastEvent('inquiry:created', { inquiry });
+
+    res.status(201).json({
+      inquiry,
+      replyPhone: db.profile.replyPhone || '0905 048 3402',
+    });
+  });
+
   // Admin Auth Routes
   app.get('/api/admin/auth/status', (_req, res) => {
     const db = loadDb();
@@ -622,10 +689,33 @@ async function startServer() {
     res.json({
       rooms,
       reservations: db.reservations,
+      inquiries: db.inquiries,
       emailLogs: db.emailLogs,
       promotions: db.promotions,
       loyaltyAccounts: db.loyaltyAccounts,
     });
+  });
+
+  app.get('/api/admin/inquiries', requireAdmin, (_req, res) => {
+    const db = loadDb();
+    res.json({ inquiries: db.inquiries });
+  });
+
+  app.patch('/api/admin/inquiries/:id', requireAdmin, (req, res) => {
+    const db = loadDb();
+    const target = db.inquiries.find((inq) => inq.id === req.params.id);
+    if (!target) {
+      res.status(404).json({ error: 'Service inquiry not found.' });
+      return;
+    }
+    const status = req.body?.status as ServiceInquiry['status'] | undefined;
+    if (!status || !['new', 'replied', 'confirmed'].includes(status)) {
+      res.status(400).json({ error: 'Invalid inquiry status.' });
+      return;
+    }
+    target.status = status;
+    saveDb(db);
+    res.json({ inquiry: target });
   });
 
   app.patch('/api/admin/reservations/:id', requireAdmin, (req, res) => {
@@ -756,7 +846,15 @@ async function startServer() {
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true, hmr: false },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+        allowedHosts: true,
+        ws: {
+          server,
+          path: '/__vite_hmr',
+        },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

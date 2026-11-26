@@ -19,6 +19,7 @@ import type {
   RoomCategory,
   RoomStatus,
   SeasonalPromotion,
+  ServiceInquiry,
 } from '../types/hotel.ts';
 import { formatDateShort, formatMoney, type CurrencyCode } from '../utils/currency.ts';
 
@@ -43,8 +44,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  const [tab, setTab] = useState<'reservations' | 'rooms' | 'promotions' | 'emails'>('reservations');
+  const [tab, setTab] = useState<'reservations' | 'inquiries' | 'rooms' | 'promotions' | 'emails'>('reservations');
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [inquiries, setInquiries] = useState<ServiceInquiry[]>([]);
   const [rooms, setRooms] = useState<RoomCategory[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [promotions, setPromotions] = useState<SeasonalPromotion[]>([]);
@@ -84,6 +86,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }
       const data = await res.json();
       setReservations(data.reservations || []);
+      setInquiries(data.inquiries || []);
       setRooms(data.rooms || []);
       setEmailLogs(data.emailLogs || []);
       setPromotions(data.promotions || []);
@@ -223,18 +226,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const handleUpdateInquiryStatus = async (inquiryId: string, status: ServiceInquiry['status']) => {
+    if (!token) return;
+    setActionBanner('');
+    const res = await fetch(`/api/admin/inquiries/${inquiryId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    if (res.ok && data.inquiry) {
+      setInquiries((prev) => prev.map((inq) => (inq.id === inquiryId ? data.inquiry : inq)));
+      setActionBanner(`Inquiry ${data.inquiry.reference} marked as ${status}.`);
+    }
+  };
+
   if (!token) {
     return (
       <section className="mx-auto max-w-md px-4 py-16">
-        <div className="rounded-2xl border border-[#14120F]/10 bg-white p-7 shadow-sm dark:border-white/10 dark:bg-[#171512] dark:text-[#F5F2EB]">
-          <div className="flex items-center gap-2 text-xs font-medium text-[#9A6E08] dark:text-[#D4AF37]">
+        <div className="rounded-2xl border border-[#7A5908]/25 bg-[#FCF4DB] p-7 shadow-sm dark:border-[#D4AF37]/25 dark:bg-[#1B160B] dark:text-[#F8ECCB]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#7D5604] dark:text-[#D4AF37]">
             <ShieldCheck className="h-4 w-4" />
             <span>Hotel Operations Console</span>
           </div>
-          <h2 className="mt-2 font-editorial text-3xl font-semibold text-[#14120F] dark:text-white">
+          <h2 className="mt-2 font-editorial text-3xl font-semibold text-[#161106] dark:text-[#F8ECCB]">
             {authStatus && !authStatus.configured ? 'Create Your Admin Passcode' : 'Admin Sign-In'}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-[#4A453D] dark:text-[#CFC8BC]">
+          <p className="mt-2 text-sm leading-relaxed text-[#3E3010] dark:text-[#DECFA8]">
             {authStatus && !authStatus.configured
               ? 'No default passcode is pre-set for security. Choose any 6+ character passcode below to claim Admin Console access.'
               : 'Enter your Joker Hotel & Suites operations passcode to manage live reservations and availability.'}
@@ -247,10 +268,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           )}
 
           <form onSubmit={handleAuthSubmit} className="mt-5 space-y-4">
-            <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+            <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
               Operations Passcode
               <div className="relative mt-1.5">
-                <KeyRound className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[#6E675C]" />
+                <KeyRound className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[#5F4A17]" />
                 <input
                   type={showPasscode ? 'text' : 'password'}
                   value={passcodeInput}
@@ -258,13 +279,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   placeholder={authStatus && !authStatus.configured ? 'Choose 6+ char passcode' : 'Enter your passcode'}
                   minLength={6}
                   required
-                  className="w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] py-2.5 pl-9 pr-10 text-sm text-[#14120F] focus:border-[#B8860B] focus:outline-none dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] py-2.5 pl-9 pr-10 text-sm text-[#161106] focus:border-[#9A6E08] focus:outline-none dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasscode((v) => !v)}
                   aria-label={showPasscode ? 'Hide passcode' : 'Show passcode'}
-                  className="absolute right-2.5 top-2.5 rounded p-1 text-[#6E675C] hover:text-[#14120F] dark:hover:text-white"
+                  className="absolute right-2.5 top-2.5 rounded p-1 text-[#5F4A17] hover:text-[#161106] dark:text-[#CBB887] dark:hover:text-[#F8ECCB]"
                 >
                   {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -273,7 +294,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full rounded-lg bg-[#14120F] py-3 text-sm font-medium text-white hover:bg-[#2C2822] disabled:opacity-50 dark:bg-[#D4AF37] dark:text-[#100F0D] dark:hover:bg-[#E0BE4C]"
+              className="w-full rounded-lg bg-[#161106] py-3 text-sm font-medium text-[#F9E7B2] hover:bg-[#2A200B] disabled:opacity-50 dark:bg-[#D4AF37] dark:text-[#141007] dark:hover:bg-[#E5C158]"
             >
               {authLoading
                 ? 'Verifying...'
@@ -313,17 +334,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#14120F]/10 pb-5 dark:border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#7A5908]/20 pb-5 dark:border-[#D4AF37]/20">
         <div>
-          <p className="text-xs font-medium text-[#9A6E08] dark:text-[#D4AF37]">Operations / Joker Hotel &amp; Suites</p>
-          <h2 className="mt-1 font-editorial text-3xl font-semibold text-[#14120F] dark:text-white">
+          <p className="text-xs font-semibold text-[#7D5604] dark:text-[#D4AF37]">Operations / Joker Hotel &amp; Suites</p>
+          <h2 className="mt-1 font-editorial text-3xl font-semibold text-[#161106] dark:text-[#F8ECCB]">
             Reservations &amp; Availability Console
           </h2>
         </div>
         <button
           type="button"
           onClick={() => setToken(null)}
-          className="inline-flex items-center gap-2 rounded-lg border border-[#14120F]/15 bg-white px-3.5 py-2 text-xs font-medium text-[#14120F] hover:bg-[#F7F5F0] dark:border-white/15 dark:bg-[#171512] dark:text-white dark:hover:bg-[#1E1B17]"
+          className="inline-flex items-center gap-2 rounded-lg border border-[#7A5908]/25 bg-[#FCF4DB] px-3.5 py-2 text-xs font-medium text-[#161106] hover:bg-[#F4E4B4] dark:border-[#D4AF37]/20 dark:bg-[#1B160B] dark:text-[#F8ECCB] dark:hover:bg-[#241D0E]"
         >
           <LogOut className="h-3.5 w-3.5" />
           <span>Sign Out</span>
@@ -332,29 +353,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* 4-Column KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-          <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">Current Occupancy</p>
-          <p className="mt-2 tabular-nums text-3xl font-bold text-[#14120F] dark:text-white">{occupancyPct}%</p>
-          <p className="mt-1 tabular-nums text-xs text-[#6E675C] dark:text-[#A9A195]">
+        <div className="rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">Current Occupancy</p>
+          <p className="mt-2 tabular-nums text-3xl font-bold text-[#161106] dark:text-[#F8ECCB]">{occupancyPct}%</p>
+          <p className="mt-1 tabular-nums text-xs text-[#5F4A17] dark:text-[#CBB887]">
             {totalUnits - availableNow} of {totalUnits} suites occupied
           </p>
         </div>
-        <div className="rounded-xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-          <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">Gross Booking Revenue</p>
-          <p className="mt-2 tabular-nums text-3xl font-bold text-[#14120F] dark:text-white">
+        <div className="rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">Gross Booking Revenue</p>
+          <p className="mt-2 tabular-nums text-3xl font-bold text-[#161106] dark:text-[#F8ECCB]">
             {formatMoney(confirmedRevenue, currency, ngnPerUsd)}
           </p>
-          <p className="mt-1 text-xs text-[#6E675C] dark:text-[#A9A195]">Verified non-cancelled stays</p>
+          <p className="mt-1 text-xs text-[#5F4A17] dark:text-[#CBB887]">Verified non-cancelled stays</p>
         </div>
-        <div className="rounded-xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-          <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">Active &amp; Upcoming Stays</p>
-          <p className="mt-2 tabular-nums text-3xl font-bold text-[#14120F] dark:text-white">{activeCount}</p>
-          <p className="mt-1 text-xs text-[#6E675C] dark:text-[#A9A195]">Confirmed + checked-in guests</p>
+        <div className="rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">Active &amp; Upcoming Stays</p>
+          <p className="mt-2 tabular-nums text-3xl font-bold text-[#161106] dark:text-[#F8ECCB]">{activeCount}</p>
+          <p className="mt-1 text-xs text-[#5F4A17] dark:text-[#CBB887]">Confirmed + checked-in guests</p>
         </div>
-        <div className="rounded-xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-          <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">Automated Emails Sent</p>
-          <p className="mt-2 tabular-nums text-3xl font-bold text-[#14120F] dark:text-white">{emailLogs.length}</p>
-          <p className="mt-1 text-xs text-[#6E675C] dark:text-[#A9A195]">100% transaction confirmation rate</p>
+        <div className="rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">Automated Emails Sent</p>
+          <p className="mt-2 tabular-nums text-3xl font-bold text-[#161106] dark:text-[#F8ECCB]">{emailLogs.length}</p>
+          <p className="mt-1 text-xs text-[#5F4A17] dark:text-[#CBB887]">100% transaction confirmation rate</p>
         </div>
       </div>
 
@@ -366,10 +387,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* Segmented Console Tabs */}
-      <div className="flex flex-wrap gap-1 rounded-xl border border-[#14120F]/10 bg-white p-1.5 dark:border-white/10 dark:bg-[#171512]">
+      <div className="flex flex-wrap gap-1 rounded-xl border border-[#7A5908]/20 bg-[#FCF4DB] p-1.5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
         {(
           [
             { id: 'reservations', label: 'Guest Reservations' },
+            { id: 'inquiries', label: `Kitchen & Event Requests (${inquiries.length})` },
             { id: 'rooms', label: 'Room Availability & Rates' },
             { id: 'promotions', label: 'Seasonal Promos & Push' },
             { id: 'emails', label: 'Confirmation Email Log' },
@@ -381,8 +403,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             onClick={() => setTab(item.id)}
             className={`rounded-lg px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap ${
               tab === item.id
-                ? 'bg-[#14120F] text-white dark:bg-[#D4AF37] dark:text-[#100F0D]'
-                : 'text-[#6E675C] hover:text-[#14120F] dark:text-[#A9A195] dark:hover:text-white'
+                ? 'bg-[#161106] text-[#F9E7B2] dark:bg-[#D4AF37] dark:text-[#141007]'
+                : 'text-[#5F4A17] hover:text-[#161106] dark:text-[#CBB887] dark:hover:text-[#F8ECCB]'
             }`}
           >
             {item.label}
@@ -392,20 +414,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 1: Reservations */}
       {tab === 'reservations' && (
-        <div className="rounded-2xl border border-[#14120F]/10 bg-white dark:border-white/10 dark:bg-[#171512]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#14120F]/10 p-4 dark:border-white/10">
+        <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#7A5908]/15 p-4 dark:border-[#D4AF37]/15">
             <div className="relative w-full max-w-xs">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[#6E675C]" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[#5F4A17]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search guest, ref, or suite..."
-                className="w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] py-2 pl-9 pr-3 text-xs text-[#14120F] focus:border-[#B8860B] focus:outline-none dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                className="w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] py-2 pl-9 pr-3 text-xs text-[#161106] focus:border-[#9A6E08] focus:outline-none dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
               />
             </div>
 
-            <div className="flex flex-wrap gap-1 rounded-lg bg-[#F7F5F0] p-1 dark:bg-[#1E1B17]">
+            <div className="flex flex-wrap gap-1 rounded-lg bg-[#F4E4B4] p-1 dark:bg-[#241D0E]">
               {(['all', 'confirmed', 'checked_in', 'checked_out', 'cancelled'] as const).map((s) => (
                 <button
                   key={s}
@@ -413,8 +435,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   onClick={() => setStatusFilter(s)}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize whitespace-nowrap ${
                     statusFilter === s
-                      ? 'bg-white text-[#14120F] shadow-sm dark:bg-[#D4AF37] dark:text-[#100F0D]'
-                      : 'text-[#6E675C] dark:text-[#A9A195]'
+                      ? 'bg-[#161106] text-[#F9E7B2] shadow-sm dark:bg-[#D4AF37] dark:text-[#141007]'
+                      : 'text-[#5F4A17] dark:text-[#CBB887]'
                   }`}
                 >
                   {s.replace('_', ' ')}
@@ -425,7 +447,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-[#14120F]/10 bg-[#FAF8F4] text-[#6E675C] dark:border-white/10 dark:bg-[#1E1B17] dark:text-[#A9A195]">
+              <thead className="border-b border-[#7A5908]/15 bg-[#F4E4B4] text-[#5F4A17] dark:border-[#D4AF37]/15 dark:bg-[#241D0E] dark:text-[#CBB887]">
                 <tr>
                   <th className="px-4 py-3 font-medium">Reference</th>
                   <th className="px-4 py-3 font-medium">Guest</th>
@@ -436,26 +458,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#14120F]/10 dark:divide-white/10">
+              <tbody className="divide-y divide-[#7A5908]/15 dark:divide-[#D4AF37]/15">
                 {filteredReservations.map((res) => (
-                  <tr key={res.id} className="hover:bg-[#FAF8F4] dark:hover:bg-[#1E1B17]">
-                    <td className="px-4 py-3 font-mono font-semibold text-[#14120F] dark:text-white">
+                  <tr key={res.id} className="hover:bg-[#F7EBBF] dark:hover:bg-[#241D0E]">
+                    <td className="px-4 py-3 font-mono font-semibold text-[#161106] dark:text-[#F8ECCB]">
                       {res.bookingRef}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[#14120F] dark:text-white">{res.guestName}</p>
-                      <p className="text-[#6E675C] dark:text-[#A9A195]">{res.guestEmail}</p>
+                      <p className="font-medium text-[#161106] dark:text-[#F8ECCB]">{res.guestName}</p>
+                      <p className="text-[#5F4A17] dark:text-[#CBB887]">{res.guestEmail}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[#14120F] dark:text-white">{res.roomName}</p>
-                      <p className="text-[#6E675C] dark:text-[#A9A195]">
+                      <p className="font-medium text-[#161106] dark:text-[#F8ECCB]">{res.roomName}</p>
+                      <p className="text-[#5F4A17] dark:text-[#CBB887]">
                         {res.airportPickup ? 'Chauffeur Pickup' : 'Standard Arrival'}
                       </p>
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-[#4A453D] dark:text-[#CFC8BC]">
+                    <td className="px-4 py-3 tabular-nums text-[#3E3010] dark:text-[#DECFA8]">
                       {formatDateShort(res.checkIn)} → {formatDateShort(res.checkOut)} ({res.nights}n)
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-[#14120F] dark:text-white">
+                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-[#161106] dark:text-[#F8ECCB]">
                       {formatMoney(res.totalPaidNgn, currency, ngnPerUsd)}
                     </td>
                     <td className="px-4 py-3">
@@ -466,8 +488,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             : res.status === 'cancelled'
                             ? 'text-red-700 dark:text-red-400'
                             : res.status === 'confirmed'
-                            ? 'text-[#9A6E08] dark:text-[#D4AF37]'
-                            : 'text-[#6E675C] dark:text-[#A9A195]'
+                            ? 'text-[#7D5604] dark:text-[#D4AF37]'
+                            : 'text-[#5F4A17] dark:text-[#CBB887]'
                         }`}
                       >
                         {res.status.replace('_', ' ')}
@@ -479,7 +501,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => handleUpdateReservationStatus(res.id, 'checked_in')}
-                            className="rounded-md bg-[#14120F] px-2.5 py-1 text-[11px] font-medium text-white hover:bg-[#2C2822]"
+                            className="rounded-md bg-[#161106] px-2.5 py-1 text-[11px] font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007]"
                           >
                             Check In
                           </button>
@@ -488,7 +510,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => handleUpdateReservationStatus(res.id, 'checked_out')}
-                            className="rounded-md border border-[#14120F]/15 bg-white px-2.5 py-1 text-[11px] font-medium text-[#14120F]"
+                            className="rounded-md border border-[#7A5908]/25 bg-[#F4E4B4] px-2.5 py-1 text-[11px] font-medium text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                           >
                             Check Out
                           </button>
@@ -497,7 +519,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => handleUpdateReservationStatus(res.id, 'cancelled')}
-                            className="rounded-md border border-red-700/20 px-2.5 py-1 text-[11px] font-medium text-red-700 hover:bg-red-50"
+                            className="rounded-md border border-red-700/20 px-2.5 py-1 text-[11px] font-medium text-red-700 hover:bg-red-50 dark:text-red-400"
                           >
                             Cancel
                           </button>
@@ -508,7 +530,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 ))}
                 {filteredReservations.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-[#6E675C]">
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-[#5F4A17] dark:text-[#CBB887]">
                       No reservations match your current filter.
                     </td>
                   </tr>
@@ -519,7 +541,100 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab 2: Rooms & Availability */}
+      {/* Tab 2: Kitchen, Gym, Events & Photo Shoot Requests */}
+      {tab === 'inquiries' && (
+        <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+          <div className="border-b border-[#7A5908]/15 px-5 py-4 dark:border-[#D4AF37]/15">
+            <h3 className="text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
+              Joker Kitchen (24/7), Events, Gym Memberships &amp; Photo Shoot Inquiries
+            </h3>
+            <p className="mt-0.5 text-xs text-[#5F4A17] dark:text-[#CBB887]">
+              Direct desk requests submitted from the hospitality showcase · Immediate line: 0905 048 3402
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[#7A5908]/15 bg-[#F4E4B4] text-[#5F4A17] dark:border-[#D4AF37]/15 dark:bg-[#241D0E] dark:text-[#CBB887]">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Reference</th>
+                  <th className="px-4 py-3 font-medium">Service Category</th>
+                  <th className="px-4 py-3 font-medium">Guest &amp; Phone</th>
+                  <th className="px-4 py-3 font-medium">Preferred Date</th>
+                  <th className="px-4 py-3 font-medium">Details</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#7A5908]/15 dark:divide-[#D4AF37]/15">
+                {inquiries.map((inq) => (
+                  <tr key={inq.id} className="hover:bg-[#F7EBBF] dark:hover:bg-[#241D0E]">
+                    <td className="px-4 py-3 font-mono font-semibold text-[#161106] dark:text-[#F8ECCB]">
+                      {inq.reference}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-[#161106] dark:text-[#F8ECCB]">
+                      {inq.category}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-[#161106] dark:text-[#F8ECCB]">{inq.guestName}</p>
+                      <p className="font-mono text-[#5F4A17] dark:text-[#CBB887]">{inq.guestPhone}</p>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-[#3E3010] dark:text-[#DECFA8]">
+                      {inq.preferredDate}
+                    </td>
+                    <td className="max-w-xs px-4 py-3 text-[#3E3010] dark:text-[#DECFA8]">
+                      {inq.details}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`font-medium capitalize ${
+                          inq.status === 'confirmed'
+                            ? 'text-emerald-800 dark:text-emerald-400'
+                            : inq.status === 'replied'
+                            ? 'text-[#7D5604] dark:text-[#D4AF37]'
+                            : 'text-[#5F4A17] dark:text-[#CBB887]'
+                        }`}
+                      >
+                        {inq.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        {inq.status === 'new' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateInquiryStatus(inq.id, 'replied')}
+                            className="rounded-md bg-[#161106] px-2.5 py-1 text-[11px] font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007]"
+                          >
+                            Mark Replied
+                          </button>
+                        )}
+                        {inq.status !== 'confirmed' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateInquiryStatus(inq.id, 'confirmed')}
+                            className="rounded-md border border-[#7A5908]/25 bg-[#F4E4B4] px-2.5 py-1 text-[11px] font-medium text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
+                          >
+                            Confirm
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {inquiries.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-[#5F4A17] dark:text-[#CBB887]">
+                      No kitchen, gym, event, or photo shoot requests submitted yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Rooms & Availability */}
       {tab === 'rooms' && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
@@ -530,19 +645,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               status: room.status,
             };
             return (
-              <div key={room.id} className="rounded-2xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
+              <div key={room.id} className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">{room.tier} Tier</p>
-                    <h3 className="text-base font-semibold text-[#14120F] dark:text-white">{room.name}</h3>
+                    <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">{room.tier} Tier</p>
+                    <h3 className="text-base font-semibold text-[#161106] dark:text-[#F8ECCB]">{room.name}</h3>
                   </div>
-                  <span className="tabular-nums text-xs font-semibold text-[#9A6E08] dark:text-[#D4AF37]">
+                  <span className="tabular-nums text-xs font-semibold text-[#7D5604] dark:text-[#D4AF37]">
                     {room.availableUnits ?? 0} free today
                   </span>
                 </div>
 
                 <div className="mt-4 space-y-3 text-xs">
-                  <label className="block font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+                  <label className="block font-medium text-[#3E3010] dark:text-[#DECFA8]">
                     Nightly Rate (₦ NGN)
                     <input
                       type="number"
@@ -555,12 +670,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           [room.id]: { ...draft, nightlyRateNgn: Number(e.target.value) },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 font-mono text-sm text-[#14120F] dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                      className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 font-mono text-sm text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                     />
                   </label>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <label className="block font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+                    <label className="block font-medium text-[#3E3010] dark:text-[#DECFA8]">
                       Total Units
                       <input
                         type="number"
@@ -573,10 +688,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             [room.id]: { ...draft, totalUnits: Number(e.target.value) },
                           }))
                         }
-                        className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 font-mono text-sm text-[#14120F] dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                        className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 font-mono text-sm text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                       />
                     </label>
-                    <label className="block font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+                    <label className="block font-medium text-[#3E3010] dark:text-[#DECFA8]">
                       Maintenance Hold
                       <input
                         type="number"
@@ -589,12 +704,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             [room.id]: { ...draft, maintenanceUnits: Number(e.target.value) },
                           }))
                         }
-                        className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 font-mono text-sm text-[#14120F] dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                        className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 font-mono text-sm text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                       />
                     </label>
                   </div>
 
-                  <label className="block font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+                  <label className="block font-medium text-[#3E3010] dark:text-[#DECFA8]">
                     Live Booking Status
                     <select
                       value={draft.status}
@@ -604,7 +719,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           [room.id]: { ...draft, status: e.target.value as RoomStatus },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 text-sm text-[#14120F] dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                      className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 text-sm text-[#161106] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                     >
                       <option value="available">Available</option>
                       <option value="maintenance">Maintenance Hold</option>
@@ -616,7 +731,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => handleSaveRoom(room.id)}
-                  className="mt-5 w-full rounded-lg bg-[#14120F] py-2.5 text-xs font-medium text-white hover:bg-[#2C2822] dark:bg-[#D4AF37] dark:text-[#100F0D]"
+                  className="mt-5 w-full rounded-lg bg-[#161106] py-2.5 text-xs font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007]"
                 >
                   Save &amp; Sync Live
                 </button>
@@ -626,18 +741,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab 3: Promotions & Push Broadcasts */}
+      {/* Tab 4: Promotions & Push Broadcasts */}
       {tab === 'promotions' && (
         <div className="grid gap-6 lg:grid-cols-12">
           <form
             onSubmit={handleCreatePromo}
-            className="space-y-4 rounded-2xl border border-[#14120F]/10 bg-white p-6 dark:border-white/10 dark:bg-[#171512] lg:col-span-5"
+            className="space-y-4 rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-6 dark:border-[#D4AF37]/20 dark:bg-[#1B160B] lg:col-span-5"
           >
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-[#14120F] dark:text-white">
-              <Plus className="h-4 w-4 text-[#B8860B]" />
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
+              <Plus className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
               <span>Publish Seasonal Offer &amp; Push Alert</span>
             </h3>
-            <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+            <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
               Campaign Title
               <input
                 type="text"
@@ -645,11 +760,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 onChange={(e) => setPromoTitle(e.target.value)}
                 placeholder="e.g. December Royal Edo Celebration"
                 required
-                className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 text-sm dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
               />
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+              <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
                 Promo Code
                 <input
                   type="text"
@@ -657,10 +772,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   placeholder="ROYAL20"
                   required
-                  className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 font-mono text-sm uppercase dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 font-mono text-sm uppercase dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 />
               </label>
-              <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+              <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
                 Discount %
                 <input
                   type="number"
@@ -669,12 +784,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   value={promoDiscount}
                   onChange={(e) => setPromoDiscount(Number(e.target.value))}
                   required
-                  className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 font-mono text-sm dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 font-mono text-sm dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 />
               </label>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+              <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
                 Category
                 <select
                   value={promoCategory}
@@ -683,53 +798,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       e.target.value as 'Seasonal Offer' | 'Lounge & Dining' | 'Weekend Escape'
                     )
                   }
-                  className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 text-sm dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 >
                   <option value="Seasonal Offer">Seasonal Offer</option>
                   <option value="Lounge & Dining">Lounge &amp; Dining</option>
                   <option value="Weekend Escape">Weekend Escape</option>
                 </select>
               </label>
-              <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+              <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
                 Valid Until
                 <input
                   type="date"
                   value={promoValidUntil}
                   onChange={(e) => setPromoValidUntil(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 text-sm dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 />
               </label>
             </div>
-            <label className="block text-xs font-medium text-[#4A453D] dark:text-[#CFC8BC]">
+            <label className="block text-xs font-medium text-[#3E3010] dark:text-[#DECFA8]">
               Offer Message (Sent in Push Notification)
               <textarea
                 rows={3}
                 value={promoDesc}
                 onChange={(e) => setPromoDesc(e.target.value)}
-                placeholder="Includes Continental breakfast and VIP Joker Lounge entry."
-                className="mt-1 w-full rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3 py-2 text-sm dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                placeholder="Includes Continental breakfast and VIP Gold Room Lounge entry."
+                className="mt-1 w-full rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3 py-2 text-sm dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
               />
             </label>
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#14120F] py-3 text-xs font-medium text-white hover:bg-[#2C2822] dark:bg-[#D4AF37] dark:text-[#100F0D]"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#161106] py-3 text-xs font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007]"
             >
               <Send className="h-3.5 w-3.5" />
               <span>Publish &amp; Push to Mobile Guests</span>
             </button>
           </form>
 
-          <div className="space-y-3 rounded-2xl border border-[#14120F]/10 bg-white p-6 dark:border-white/10 dark:bg-[#171512] lg:col-span-7">
-            <h3 className="text-sm font-semibold text-[#14120F] dark:text-white">Active &amp; Archived Campaigns</h3>
-            <div className="divide-y divide-[#14120F]/10 dark:divide-white/10">
+          <div className="space-y-3 rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-6 dark:border-[#D4AF37]/20 dark:bg-[#1B160B] lg:col-span-7">
+            <h3 className="text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">Active &amp; Archived Campaigns</h3>
+            <div className="divide-y divide-[#7A5908]/15 dark:divide-[#D4AF37]/15">
               {promotions.map((p) => (
                 <div key={p.id} className="flex items-center justify-between gap-4 py-3.5 text-sm">
                   <div>
-                    <p className="font-semibold text-[#14120F] dark:text-white">
+                    <p className="font-semibold text-[#161106] dark:text-[#F8ECCB]">
                       {p.title}{' '}
-                      <span className="font-mono text-xs text-[#9A6E08] dark:text-[#D4AF37]">({p.code})</span>
+                      <span className="font-mono text-xs text-[#7D5604] dark:text-[#D4AF37]">({p.code})</span>
                     </p>
-                    <p className="mt-0.5 text-xs text-[#6E675C] dark:text-[#A9A195]">
+                    <p className="mt-0.5 text-xs text-[#5F4A17] dark:text-[#CBB887]">
                       {p.discountPercent}% off · {p.category} ·{' '}
                       {p.active ? 'Active' : 'Archived'}
                     </p>
@@ -739,7 +854,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="button"
                       onClick={() => handleDeactivatePromo(p.id)}
                       aria-label={`Archive ${p.code}`}
-                      className="rounded-lg p-2 text-[#6E675C] hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+                      className="rounded-lg p-2 text-[#5F4A17] hover:bg-red-50 hover:text-red-700 dark:text-[#CBB887] dark:hover:bg-red-950/40"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -751,44 +866,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab 4: Automated Email Confirmation Dispatch Log */}
+      {/* Tab 5: Automated Email Confirmation Dispatch Log */}
       {tab === 'emails' && (
         <div className="grid gap-6 lg:grid-cols-12">
-          <div className="divide-y divide-[#14120F]/10 rounded-2xl border border-[#14120F]/10 bg-white dark:divide-white/10 dark:border-white/10 dark:bg-[#171512] lg:col-span-6">
+          <div className="divide-y divide-[#7A5908]/15 rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] dark:divide-[#D4AF37]/15 dark:border-[#D4AF37]/20 dark:bg-[#1B160B] lg:col-span-6">
             {emailLogs.map((log) => (
               <button
                 key={log.id}
                 type="button"
                 onClick={() => setSelectedEmail(log)}
-                className={`flex w-full items-start justify-between gap-3 p-4 text-left transition-colors hover:bg-[#FAF8F4] dark:hover:bg-[#1E1B17] ${
-                  selectedEmail?.id === log.id ? 'bg-[#FAF8F4] dark:bg-[#1E1B17]' : ''
+                className={`flex w-full items-start justify-between gap-3 p-4 text-left transition-colors hover:bg-[#F7EBBF] dark:hover:bg-[#241D0E] ${
+                  selectedEmail?.id === log.id ? 'bg-[#F7EBBF] dark:bg-[#241D0E]' : ''
                 }`}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-[#14120F] dark:text-white">{log.subject}</p>
-                  <p className="mt-0.5 text-xs text-[#6E675C] dark:text-[#A9A195]">
+                  <p className="truncate text-xs font-semibold text-[#161106] dark:text-[#F8ECCB]">{log.subject}</p>
+                  <p className="mt-0.5 text-xs text-[#5F4A17] dark:text-[#CBB887]">
                     To: {log.toEmail} · {log.deliveryMode === 'smtp' ? 'SMTP Delivered' : 'Verified Dispatch'}
                   </p>
                 </div>
-                <span className="shrink-0 font-mono text-[11px] text-[#6E675C] dark:text-[#A9A195]">
+                <span className="shrink-0 font-mono text-[11px] text-[#5F4A17] dark:text-[#CBB887]">
                   {formatDateShort(log.sentAt.slice(0, 10))}
                 </span>
               </button>
             ))}
           </div>
-          <div className="rounded-2xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512] lg:col-span-6">
+          <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B] lg:col-span-6">
             {selectedEmail ? (
               <div>
-                <div className="flex items-center gap-2 border-b border-[#14120F]/10 pb-3 text-xs font-semibold text-[#14120F] dark:border-white/10 dark:text-white">
-                  <Mail className="h-4 w-4 text-[#B8860B]" />
+                <div className="flex items-center gap-2 border-b border-[#7A5908]/15 pb-3 text-xs font-semibold text-[#161106] dark:border-[#D4AF37]/15 dark:text-[#F8ECCB]">
+                  <Mail className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                   <span>{selectedEmail.subject}</span>
                 </div>
-                <pre className="mt-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono text-xs leading-relaxed text-[#38332C] dark:text-[#CFC8BC]">
+                <pre className="mt-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono text-xs leading-relaxed text-[#3E3010] dark:text-[#DECFA8]">
                   {selectedEmail.bodyText}
                 </pre>
               </div>
             ) : (
-              <p className="py-12 text-center text-sm text-[#6E675C] dark:text-[#A9A195]">
+              <p className="py-12 text-center text-sm text-[#5F4A17] dark:text-[#CBB887]">
                 Select any automated confirmation email on the left to inspect its full receipt payload.
               </p>
             )}

@@ -120,13 +120,13 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
   return (
     <section className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
       {/* Header & Member Switcher */}
-      <div className="flex flex-col justify-between gap-4 border-b border-[#14120F]/10 pb-6 dark:border-white/10 md:flex-row md:items-end">
+      <div className="flex flex-col justify-between gap-4 border-b border-[#7A5908]/20 pb-6 dark:border-[#D4AF37]/20 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-medium text-[#9A6E08] dark:text-[#D4AF37]">Mobile PWA &amp; Guest Loyalty</p>
-          <h2 className="mt-1 font-editorial text-3xl font-semibold text-[#14120F] dark:text-white sm:text-4xl">
+          <p className="text-xs font-semibold text-[#7D5604] dark:text-[#D4AF37]">Mobile PWA &amp; Guest Loyalty</p>
+          <h2 className="mt-1 font-editorial text-3xl font-semibold text-[#161106] dark:text-[#F8ECCB] sm:text-4xl">
             Joker Royal Club &amp; Alerts
           </h2>
-          <p className="mt-1.5 text-sm text-[#4A453D] dark:text-[#CFC8BC]">
+          <p className="mt-1.5 text-sm text-[#3E3010] dark:text-[#DECFA8]">
             Earn 1 point per ₦1,000 spent, redeem directly at checkout, and receive instant push alerts.
           </p>
         </div>
@@ -140,11 +140,11 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
               onChange={(e) => setEmailInput(e.target.value)}
               placeholder="Guest email lookup"
               aria-label="Guest email lookup"
-              className="h-11 rounded-lg border border-[#14120F]/15 bg-white px-3 text-sm text-[#14120F] focus:border-[#B8860B] focus:outline-none dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+              className="h-11 rounded-lg border border-[#7A5908]/25 bg-[#FCF4DB] px-3 text-sm text-[#161106] focus:border-[#9A6E08] focus:outline-none dark:border-[#D4AF37]/20 dark:bg-[#231C0E] dark:text-[#F8ECCB]"
             />
             <button
               type="submit"
-              className="h-11 rounded-lg bg-[#14120F] px-4 text-xs font-medium text-white hover:bg-[#2C2822] dark:bg-[#D4AF37] dark:text-[#100F0D] dark:hover:bg-[#E0BE4C] whitespace-nowrap"
+              className="h-11 rounded-lg bg-[#161106] px-4 text-xs font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007] dark:hover:bg-[#E5C158] whitespace-nowrap"
             >
               Load Profile
             </button>
@@ -156,14 +156,14 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Left: Loyalty Membership Card & Tier Progress */}
         <div className="space-y-6 lg:col-span-6">
-          <div className="rounded-2xl bg-[#100F0D] p-6 text-white shadow-sm">
+          <div className="rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#1B1508] to-[#120D05] p-6 text-white shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-medium text-[#D4AF37]">Joker Royal Club</p>
+                <p className="text-xs font-medium text-[#E5C158]">Joker Royal Club</p>
                 <h3 className="mt-1 font-editorial text-2xl font-semibold">
                   {loyalty?.tier || 'Spade Silver'}
                 </h3>
-                <p className="mt-0.5 font-mono text-xs text-white/60">
+                <p className="mt-0.5 font-mono text-xs text-[#F5E7BA]/65">
                   {loyalty?.memberId || 'JHS-MEMBER'} · {activeGuestEmail}
                 </p>
               </div>
@@ -176,7 +176,7 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                     cy="48"
                     r={radius}
                     fill="none"
-                    stroke="rgba(255,255,255,0.12)"
+                    stroke="rgba(212,175,55,0.2)"
                     strokeWidth="6"
                   />
                   <circle
@@ -199,22 +199,22 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-5">
+            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-[#D4AF37]/20 pt-5">
               <div>
-                <p className="text-xs text-white/60">Redeemable Points</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#D4AF37]">
+                <p className="text-xs text-[#F5E7BA]/65">Redeemable Points</p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-[#E5C158]">
                   {(loyalty?.points || 0).toLocaleString()} pts
                 </p>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-[#F5E7BA]/65">
                   Worth {formatMoney((loyalty?.points || 0) * 15, currency, ngnPerUsd)} at checkout
                 </p>
               </div>
               <div>
-                <p className="text-xs text-white/60">Lifetime Tier Points</p>
+                <p className="text-xs text-[#F5E7BA]/65">Lifetime Tier Points</p>
                 <p className="mt-1 tabular-nums text-2xl font-bold text-white">
                   {(loyalty?.lifetimePoints || 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-[#F5E7BA]/65">
                   {loyalty?.tier === 'Obsidian VIP'
                     ? 'Top VIP tier unlocked'
                     : `${Math.max(0, nextTierTarget - (loyalty?.lifetimePoints || 0)).toLocaleString()} pts to next tier`}
@@ -222,52 +222,52 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-xs text-white/75">
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[#D4AF37]/20 pt-4 text-xs text-[#F5E7BA]/80">
               <div>
                 <p className="font-semibold text-white">Spade Silver</p>
-                <p className="text-white/60">0+ pts · Priority desk</p>
+                <p className="text-[#F5E7BA]/60">0+ pts · Priority desk</p>
               </div>
               <div>
-                <p className="font-semibold text-[#D4AF37]">Gold Crown</p>
-                <p className="text-white/60">1,000+ · 10% dining</p>
+                <p className="font-semibold text-[#E5C158]">Gold Crown</p>
+                <p className="text-[#F5E7BA]/60">1,000+ · 10% dining</p>
               </div>
               <div>
                 <p className="font-semibold text-white">Obsidian VIP</p>
-                <p className="text-white/60">3,000+ · Chauffeur</p>
+                <p className="text-[#F5E7BA]/60">3,000+ · Chauffeur</p>
               </div>
             </div>
           </div>
 
           {/* Points Activity Ledger */}
-          <div className="rounded-2xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-            <div className="flex items-center justify-between border-b border-[#14120F]/10 pb-3 dark:border-white/10">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-[#14120F] dark:text-white">
-                <Award className="h-4 w-4 text-[#B8860B]" />
+          <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+            <div className="flex items-center justify-between border-b border-[#7A5908]/15 pb-3 dark:border-[#D4AF37]/15">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
+                <Award className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                 <span>Points Activity</span>
               </h3>
-              <span className="text-xs text-[#6E675C] dark:text-[#A9A195]">1 pt = ₦15 credit</span>
+              <span className="text-xs text-[#5F4A17] dark:text-[#CBB887]">1 pt = ₦15 credit</span>
             </div>
 
             {loading ? (
-              <p className="py-6 text-center text-sm text-[#6E675C] dark:text-[#A9A195]">Loading rewards ledger...</p>
+              <p className="py-6 text-center text-sm text-[#5F4A17] dark:text-[#CBB887]">Loading rewards ledger...</p>
             ) : !loyalty || loyalty.history.length === 0 ? (
-              <p className="py-6 text-sm text-[#6E675C] dark:text-[#A9A195]">
+              <p className="py-6 text-sm text-[#5F4A17] dark:text-[#CBB887]">
                 Complete your first reservation with {activeGuestEmail} to earn Royal Club points.
               </p>
             ) : (
-              <ul className="divide-y divide-[#14120F]/10 dark:divide-white/10">
+              <ul className="divide-y divide-[#7A5908]/15 dark:divide-[#D4AF37]/15">
                 {loyalty.history.slice(0, 5).map((entry) => (
                   <li key={entry.id} className="flex items-center justify-between gap-4 py-3 text-sm">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-[#14120F] dark:text-white">{entry.description}</p>
-                      <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">
+                      <p className="truncate font-medium text-[#161106] dark:text-[#F8ECCB]">{entry.description}</p>
+                      <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">
                         {formatDateShort(entry.date.slice(0, 10))}
                         {entry.bookingRef ? ` · ${entry.bookingRef}` : ''}
                       </p>
                     </div>
                     <span
                       className={`tabular-nums shrink-0 font-semibold ${
-                        entry.pointsDelta >= 0 ? 'text-emerald-800 dark:text-emerald-400' : 'text-[#9A6E08] dark:text-[#D4AF37]'
+                        entry.pointsDelta >= 0 ? 'text-emerald-800 dark:text-emerald-400' : 'text-[#7D5604] dark:text-[#D4AF37]'
                       }`}
                     >
                       {entry.pointsDelta >= 0 ? `+${entry.pointsDelta}` : entry.pointsDelta} pts
@@ -281,14 +281,14 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
 
         {/* Right: Push Notifications & Seasonal Promotions */}
         <div className="space-y-6 lg:col-span-6">
-          <div className="rounded-2xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#14120F]/10 pb-4 dark:border-white/10">
+          <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#7A5908]/15 pb-4 dark:border-[#D4AF37]/15">
               <div>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-[#14120F] dark:text-white">
-                  <BellRing className="h-4 w-4 text-[#B8860B]" />
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
+                  <BellRing className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
                   <span>Mobile Push Notifications</span>
                 </h3>
-                <p className="mt-0.5 text-xs text-[#6E675C] dark:text-[#A9A195]">
+                <p className="mt-0.5 text-xs text-[#5F4A17] dark:text-[#CBB887]">
                   Status:{' '}
                   {permission === 'granted'
                     ? 'Device alerts enabled'
@@ -304,7 +304,7 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                   <button
                     type="button"
                     onClick={handleEnablePush}
-                    className="min-h-[44px] rounded-lg bg-[#14120F] px-3.5 py-2 text-xs font-medium text-white hover:bg-[#2C2822] dark:bg-[#D4AF37] dark:text-[#100F0D]"
+                    className="min-h-[44px] rounded-lg bg-[#161106] px-3.5 py-2 text-xs font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007]"
                   >
                     Enable Push Alerts
                   </button>
@@ -312,7 +312,7 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                 <button
                   type="button"
                   onClick={handleTriggerCheckInReminder}
-                  className="min-h-[44px] rounded-lg border border-[#14120F]/15 bg-[#F7F5F0] px-3.5 py-2 text-xs font-medium text-[#14120F] hover:bg-[#EDE9E0] dark:border-white/15 dark:bg-[#1E1B17] dark:text-white"
+                  className="min-h-[44px] rounded-lg border border-[#7A5908]/25 bg-[#F4E4B4] px-3.5 py-2 text-xs font-medium text-[#161106] hover:bg-[#EBD594] dark:border-[#D4AF37]/20 dark:bg-[#241D0E] dark:text-[#F8ECCB]"
                 >
                   Send Check-In Alert
                 </button>
@@ -320,16 +320,16 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
             </div>
 
             {reminderStatus && (
-              <p className="mt-3 text-xs font-medium text-[#9A6E08] dark:text-[#D4AF37]">{reminderStatus}</p>
+              <p className="mt-3 text-xs font-medium text-[#7D5604] dark:text-[#D4AF37]">{reminderStatus}</p>
             )}
 
             <div className="mt-4 space-y-3">
               {notifications.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 rounded-xl border border-[#14120F]/10 bg-[#FAF8F4] p-3.5 dark:border-white/10 dark:bg-[#1E1B17]"
+                  className="flex items-start gap-3 rounded-xl border border-[#7A5908]/15 bg-[#F4E4B4] p-3.5 dark:border-[#D4AF37]/15 dark:bg-[#241D0E]"
                 >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#100F0D] text-[#D4AF37]">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#161106] text-[#D4AF37]">
                     {item.category === 'promotion' ? (
                       <Tag className="h-4 w-4" />
                     ) : item.category === 'booking_reminder' ? (
@@ -340,17 +340,17 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-[#14120F] dark:text-white">{item.title}</p>
-                      <span className="shrink-0 text-[11px] text-[#6E675C] dark:text-[#A9A195]">
+                      <p className="truncate text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">{item.title}</p>
+                      <span className="shrink-0 text-[11px] text-[#5F4A17] dark:text-[#CBB887]">
                         {formatDateShort(item.createdAt.slice(0, 10))}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs leading-relaxed text-[#4A453D] dark:text-[#CFC8BC]">{item.body}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#3E3010] dark:text-[#DECFA8]">{item.body}</p>
                     {item.promoCode && (
                       <button
                         type="button"
                         onClick={() => onApplyPromoAndBook(item.promoCode!)}
-                        className="mt-2 text-xs font-semibold text-[#9A6E08] dark:text-[#D4AF37] underline underline-offset-2"
+                        className="mt-2 text-xs font-semibold text-[#7D5604] dark:text-[#D4AF37] underline underline-offset-2"
                       >
                         Apply {item.promoCode} &amp; Book Suite
                       </button>
@@ -362,28 +362,28 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
           </div>
 
           {/* Seasonal Promotions */}
-          <div className="rounded-2xl border border-[#14120F]/10 bg-white p-5 dark:border-white/10 dark:bg-[#171512]">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-[#14120F] dark:text-white">
-              <Sparkles className="h-4 w-4 text-[#B8860B]" />
+          <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-5 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
+              <Sparkles className="h-4 w-4 text-[#9A6E08] dark:text-[#D4AF37]" />
               <span>Special Seasonal Promotions</span>
             </h3>
             <div className="mt-4 space-y-3">
               {promotions.map((promo) => (
                 <div
                   key={promo.id}
-                  className="flex flex-col justify-between gap-3 rounded-xl border border-[#14120F]/10 p-4 dark:border-white/10 sm:flex-row sm:items-center"
+                  className="flex flex-col justify-between gap-3 rounded-xl border border-[#7A5908]/15 bg-[#F4E4B4]/70 p-4 dark:border-[#D4AF37]/15 dark:bg-[#241D0E] sm:flex-row sm:items-center"
                 >
                   <div>
-                    <p className="text-xs text-[#6E675C] dark:text-[#A9A195]">
+                    <p className="text-xs text-[#5F4A17] dark:text-[#CBB887]">
                       {promo.category} · Valid until {formatDateShort(promo.validUntil)}
                     </p>
-                    <p className="mt-0.5 text-sm font-semibold text-[#14120F] dark:text-white">{promo.title}</p>
-                    <p className="mt-1 text-xs text-[#4A453D] dark:text-[#CFC8BC]">{promo.description}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">{promo.title}</p>
+                    <p className="mt-1 text-xs text-[#3E3010] dark:text-[#DECFA8]">{promo.description}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => onApplyPromoAndBook(promo.code)}
-                    className="min-h-[44px] shrink-0 rounded-lg bg-[#14120F] px-4 py-2 text-xs font-medium text-white hover:bg-[#2C2822] dark:bg-[#D4AF37] dark:text-[#100F0D] whitespace-nowrap"
+                    className="min-h-[44px] shrink-0 rounded-lg bg-[#161106] px-4 py-2 text-xs font-medium text-[#F9E7B2] hover:bg-[#2A200B] dark:bg-[#D4AF37] dark:text-[#141007] whitespace-nowrap"
                   >
                     Book · {promo.code}
                   </button>
@@ -395,20 +395,20 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
       </div>
 
       {/* Guest Bookings & Automated Confirmation Emails */}
-      <div className="rounded-2xl border border-[#14120F]/10 bg-white p-6 dark:border-white/10 dark:bg-[#171512]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#14120F]/10 pb-4 dark:border-white/10">
-          <h3 className="text-base font-semibold text-[#14120F] dark:text-white">
+      <div className="rounded-2xl border border-[#7A5908]/20 bg-[#FCF4DB] p-6 dark:border-[#D4AF37]/20 dark:bg-[#1B160B]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#7A5908]/15 pb-4 dark:border-[#D4AF37]/15">
+          <h3 className="text-base font-semibold text-[#161106] dark:text-[#F8ECCB]">
             My Reservations &amp; Email Receipts ({reservations.length})
           </h3>
-          <span className="text-xs text-[#6E675C] dark:text-[#A9A195]">{activeGuestEmail}</span>
+          <span className="text-xs text-[#5F4A17] dark:text-[#CBB887]">{activeGuestEmail}</span>
         </div>
 
         {reservations.length === 0 ? (
-          <p className="py-6 text-sm text-[#6E675C] dark:text-[#A9A195]">
+          <p className="py-6 text-sm text-[#5F4A17] dark:text-[#CBB887]">
             No bookings found for {activeGuestEmail} yet.
           </p>
         ) : (
-          <div className="mt-4 divide-y divide-[#14120F]/10">
+          <div className="mt-4 divide-y divide-[#7A5908]/15 dark:divide-[#D4AF37]/15">
             {reservations.map((res) => {
               const mail = emailLogs.find((m) => m.bookingRef === res.bookingRef);
               return (
@@ -417,8 +417,8 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                   className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center"
                 >
                   <div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#6E675C]">
-                      <span className="font-mono font-semibold text-[#14120F]">{res.bookingRef}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#5F4A17] dark:text-[#CBB887]">
+                      <span className="font-mono font-semibold text-[#161106] dark:text-[#F8ECCB]">{res.bookingRef}</span>
                       <span>·</span>
                       <span className="capitalize">{res.status.replace('_', ' ')}</span>
                       <span>·</span>
@@ -426,14 +426,14 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
                         {formatDateShort(res.checkIn)} – {formatDateShort(res.checkOut)}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm font-semibold text-[#14120F]">{res.roomName}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">{res.roomName}</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="tabular-nums text-sm font-semibold text-[#14120F]">
+                    <span className="tabular-nums text-sm font-semibold text-[#161106] dark:text-[#F8ECCB]">
                       {formatMoney(res.totalPaidNgn, currency, ngnPerUsd)}
                     </span>
                     {mail && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-400">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <Mail className="h-3.5 w-3.5" />
                         <span>Email Confirmed</span>
