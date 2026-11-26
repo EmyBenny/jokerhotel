@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import type {
   BookingQuote,
@@ -34,7 +35,26 @@ export interface HotelDatabase {
   adminCredential: AdminCredential | null;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const BUNDLED_DATA_DIR = path.resolve(process.cwd(), 'data');
+const BUNDLED_DB_FILE = path.join(BUNDLED_DATA_DIR, 'hotel-db.json');
+const TMP_DATA_DIR = path.join(os.tmpdir(), 'joker-hotel-data');
+
+function resolveWritableDataDir(): string {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return TMP_DATA_DIR;
+  }
+  try {
+    if (!fs.existsSync(BUNDLED_DATA_DIR)) {
+      fs.mkdirSync(BUNDLED_DATA_DIR, { recursive: true });
+    }
+    fs.accessSync(BUNDLED_DATA_DIR, fs.constants.W_OK);
+    return BUNDLED_DATA_DIR;
+  } catch {
+    return TMP_DATA_DIR;
+  }
+}
+
+const DATA_DIR = resolveWritableDataDir();
 const DB_FILE = path.join(DATA_DIR, 'hotel-db.json');
 
 function addDaysIso(offsetDays: number): string {
@@ -465,37 +485,45 @@ function createInitialDb(): HotelDatabase {
 
 let cachedDb: HotelDatabase | null = null;
 
+function migrateParsedDb(parsed: HotelDatabase): { db: HotelDatabase; migrated: boolean } {
+  let migrated = false;
+  const defaults = createInitialDb();
+
+  if (!parsed.profile.replyPhone) {
+    parsed.profile.replyPhone = defaults.profile.replyPhone;
+    migrated = true;
+  }
+  if (!parsed.profile.address || parsed.profile.address.includes('GRA Executive Boulevard')) {
+    parsed.profile.address = defaults.profile.address;
+    migrated = true;
+  }
+  if (!Array.isArray(parsed.inquiries)) {
+    parsed.inquiries = [];
+    migrated = true;
+  }
+  if (!parsed.amenities?.some((a) => a.id === 'amen-joker-kitchen' && a.imageUrl)) {
+    parsed.amenities = defaults.amenities;
+    migrated = true;
+  }
+
+  return { db: parsed, migrated };
+}
+
 export function loadDb(): HotelDatabase {
   if (cachedDb) return cachedDb;
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, 'utf8');
+    const sourceFile = fs.existsSync(DB_FILE)
+      ? DB_FILE
+      : fs.existsSync(BUNDLED_DB_FILE)
+      ? BUNDLED_DB_FILE
+      : null;
+
+    if (sourceFile) {
+      const raw = fs.readFileSync(sourceFile, 'utf8');
       const parsed = JSON.parse(raw) as HotelDatabase;
-      let migrated = false;
-      const defaults = createInitialDb();
-
-      if (!parsed.profile.replyPhone) {
-        parsed.profile.replyPhone = defaults.profile.replyPhone;
-        migrated = true;
-      }
-      if (!parsed.profile.address || parsed.profile.address.includes('GRA Executive Boulevard')) {
-        parsed.profile.address = defaults.profile.address;
-        migrated = true;
-      }
-      if (!Array.isArray(parsed.inquiries)) {
-        parsed.inquiries = [];
-        migrated = true;
-      }
-      if (!parsed.amenities?.some((a) => a.id === 'amen-joker-kitchen' && a.imageUrl)) {
-        parsed.amenities = defaults.amenities;
-        migrated = true;
-      }
-
-      cachedDb = parsed;
-      if (migrated) {
+      const { db, migrated } = migrateParsedDb(parsed);
+      cachedDb = db;
+      if (migrated || sourceFile !== DB_FILE) {
         saveDb(cachedDb);
       }
       return cachedDb;
@@ -510,12 +538,16 @@ export function loadDb(): HotelDatabase {
 
 export function saveDb(db: HotelDatabase): void {
   cachedDb = db;
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    const tmpFile = `${DB_FILE}.${process.pid}.tmp`;
+    fs.writeFileSync(tmpFile, JSON.stringify(db, null, 2), 'utf8');
+    fs.renameSync(tmpFile, DB_FILE);
+  } catch (err) {
+    console.warn('Unable to persist hotel-db.json to disk (continuing in memory):', err);
   }
-  const tmpFile = `${DB_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmpFile, JSON.stringify(db, null, 2), 'utf8');
-  fs.renameSync(tmpFile, DB_FILE);
 }
 
 export function datesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {

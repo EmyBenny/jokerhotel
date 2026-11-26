@@ -38,6 +38,7 @@ import {
   todayIso,
   type CurrencyCode,
 } from './utils/currency.ts';
+import { fetchJson } from './utils/api.ts';
 
 type ActiveView = 'stay' | 'rewards' | 'admin';
 
@@ -86,11 +87,16 @@ export default function App() {
 
   const fetchBootstrap = useCallback(async (inDate: string, outDate: string) => {
     try {
-      const res = await fetch(
+      const { data } = await fetchJson<{
+        profile: HotelProfile;
+        rooms: RoomCategory[];
+        amenities: HotelAmenity[];
+        promotions: SeasonalPromotion[];
+        notifications: PushNotificationItem[];
+        dailyAvailability: DailyAvailabilityItem[];
+      }>(
         `/api/hotel/bootstrap?checkIn=${encodeURIComponent(inDate)}&checkOut=${encodeURIComponent(outDate)}`
       );
-      if (!res.ok) return;
-      const data = await res.json();
       setProfile(data.profile);
       setRooms(data.rooms || []);
       setAmenities(data.amenities || []);
@@ -108,16 +114,23 @@ export default function App() {
     fetchBootstrap(checkIn, checkOut);
   }, [fetchBootstrap, checkIn, checkOut]);
 
-  // Real-time WebSocket synchronization
+  // Real-time WebSocket synchronization (automatically steps down cleanly on serverless hosts without WS)
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimer: number | undefined;
     let unmounted = false;
+    let hasOpenedOnce = false;
+    let failedAttempts = 0;
 
     const connect = () => {
       if (unmounted) return;
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+      ws.onopen = () => {
+        hasOpenedOnce = true;
+        failedAttempts = 0;
+      };
 
       ws.onmessage = (event) => {
         try {
@@ -152,9 +165,14 @@ export default function App() {
       };
 
       ws.onclose = () => {
-        if (!unmounted) {
-          reconnectTimer = window.setTimeout(connect, 3000);
+        if (unmounted) return;
+        if (!hasOpenedOnce) {
+          failedAttempts += 1;
+          if (failedAttempts >= 2) {
+            return;
+          }
         }
+        reconnectTimer = window.setTimeout(connect, 3000);
       };
     };
 

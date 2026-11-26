@@ -17,6 +17,7 @@ import {
   Waves,
 } from 'lucide-react';
 import type { HotelAmenity, HotelProfile, InquiryCategory, ServiceInquiry } from '../types/hotel.ts';
+import { fetchJson } from '../utils/api.ts';
 
 interface ExperienceShowcaseProps {
   amenities: HotelAmenity[];
@@ -227,7 +228,7 @@ export const ExperienceShowcase: React.FC<ExperienceShowcaseProps> = ({
     setSubmitError('');
     setSubmitting(true);
     try {
-      const res = await fetch('/api/inquiries', {
+      const { data } = await fetchJson<{ inquiry: ServiceInquiry }>('/api/inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,10 +239,6 @@ export const ExperienceShowcase: React.FC<ExperienceShowcaseProps> = ({
           details,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Could not submit inquiry.');
-      }
       setSubmittedInquiry(data.inquiry);
       setDetails('');
     } catch (err) {

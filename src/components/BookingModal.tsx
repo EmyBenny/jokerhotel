@@ -21,6 +21,7 @@ import type {
   SeasonalPromotion,
 } from '../types/hotel.ts';
 import { formatDateShort, formatMoney, type CurrencyCode } from '../utils/currency.ts';
+import { fetchJson } from '../utils/api.ts';
 
 interface BookingModalProps {
   room: RoomCategory | null;
@@ -104,9 +105,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       return;
     }
     let cancelled = false;
-    fetch(`/api/guest/overview?email=${encodeURIComponent(trimmed)}`)
-      .then((r) => r.json())
-      .then((data) => {
+    fetchJson<{ loyalty?: LoyaltyAccount }>(`/api/guest/overview?email=${encodeURIComponent(trimmed)}`)
+      .then(({ data }) => {
         if (!cancelled && data?.loyalty) {
           setMemberBalance(data.loyalty);
         }
@@ -125,7 +125,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setError('');
     const pointsToTry = useLoyaltyPoints && memberBalance ? memberBalance.points : 0;
 
-    fetch('/api/bookings/quote', {
+    fetchJson<{ quote: BookingQuote }>('/api/bookings/quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -137,9 +137,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         promoCode: promoCode.trim() || undefined,
       }),
     })
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Could not calculate stay quote.');
+      .then(({ data }) => {
         if (!cancelled) setQuote(data.quote);
       })
       .catch((err) => {
@@ -178,7 +176,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   const finalizeBooking = async (intentId: string) => {
-    const confirmRes = await fetch('/api/bookings/confirm', {
+    const { data: confirmData } = await fetchJson<{
+      reservation: Reservation;
+      emailLog: EmailLog;
+      loyalty: LoyaltyAccount;
+    }>('/api/bookings/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -190,10 +192,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         airportPickup,
       }),
     });
-    const confirmData = await confirmRes.json();
-    if (!confirmRes.ok) {
-      throw new Error(confirmData.error || 'Reservation confirmation failed.');
-    }
     setConfirmedData(confirmData);
     setStep('confirmed');
     onBookingCompleted(confirmData);
@@ -206,7 +204,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setProcessing(true);
 
     try {
-      const intentRes = await fetch('/api/payments/create-intent', {
+      const { data: intentData } = await fetchJson<{
+        intentId: string;
+        paymentRef: string;
+        amountNgn: number;
+        virtualAccount?: { bankName: string; accountNumber: string; accountName: string };
+      }>('/api/payments/create-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,10 +225,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           cardCvc: paymentMethod === 'card' ? cardCvc : undefined,
         }),
       });
-      const intentData = await intentRes.json();
-      if (!intentRes.ok) {
-        throw new Error(intentData.error || 'Payment verification failed.');
-      }
 
       if (paymentMethod === 'bank_transfer' && intentData.virtualAccount) {
         setPendingTransferIntent({

@@ -19,6 +19,7 @@ import type {
 import { usePushPermission } from '../hooks/usePWAInstall.ts';
 import { PWAInstallButton } from './PWAInstallButton.tsx';
 import { formatDateShort, formatMoney, type CurrencyCode } from '../utils/currency.ts';
+import { fetchJson } from '../utils/api.ts';
 
 interface LoyaltyMobileViewProps {
   activeGuestEmail: string;
@@ -53,8 +54,11 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
   const fetchGuestOverview = useCallback(async (email: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/guest/overview?email=${encodeURIComponent(email)}`);
-      const data = await res.json();
+      const { data } = await fetchJson<{
+        loyalty?: LoyaltyAccount;
+        reservations?: Reservation[];
+        emailLogs?: EmailLog[];
+      }>(`/api/guest/overview?email=${encodeURIComponent(email)}`);
       setLoyalty(data.loyalty || null);
       setReservations(data.reservations || []);
       setEmailLogs(data.emailLogs || []);
@@ -90,12 +94,11 @@ export const LoyaltyMobileView: React.FC<LoyaltyMobileViewProps> = ({
   const handleTriggerCheckInReminder = async () => {
     setReminderStatus('');
     try {
-      const res = await fetch('/api/guest/check-reminders', {
+      const { data } = await fetchJson<{ reminder?: PushNotificationItem | null }>('/api/guest/check-reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: activeGuestEmail }),
       });
-      const data = await res.json();
       if (data.reminder) {
         onNewNotification(data.reminder);
         await showDeviceNotification(data.reminder.title, data.reminder.body, data.reminder.id);

@@ -22,6 +22,7 @@ import type {
   ServiceInquiry,
 } from '../types/hotel.ts';
 import { formatDateShort, formatMoney, type CurrencyCode } from '../utils/currency.ts';
+import { fetchJson } from '../utils/api.ts';
 
 interface AdminDashboardProps {
   currency: CurrencyCode;
@@ -69,22 +70,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [promoDesc, setPromoDesc] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/auth/status')
-      .then((r) => r.json())
-      .then((data) => setAuthStatus(data))
-      .catch(() => setAuthStatus({ configured: false, envManaged: false }));
+    fetchJson<{ configured: boolean; envManaged: boolean }>('/api/admin/auth/status')
+      .then(({ data }) => setAuthStatus(data))
+      .catch((err) => {
+        setAuthStatus({ configured: true, envManaged: false });
+        setAuthError(err instanceof Error ? err.message : 'Unable to reach authentication service.');
+      });
   }, []);
 
   const fetchDashboard = useCallback(async (authToken: string) => {
     try {
-      const res = await fetch('/api/admin/dashboard', {
+      const { data } = await fetchJson<{
+        reservations: Reservation[];
+        inquiries: ServiceInquiry[];
+        rooms: RoomCategory[];
+        emailLogs: EmailLog[];
+        promotions: SeasonalPromotion[];
+      }>('/api/admin/dashboard', {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      if (res.status === 401) {
-        setToken(null);
-        return;
-      }
-      const data = await res.json();
       setReservations(data.reservations || []);
       setInquiries(data.inquiries || []);
       setRooms(data.rooms || []);
@@ -104,8 +108,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         };
       }
       setRoomDrafts(drafts);
-    } catch {
-      // ignore transient error
+    } catch (err) {
+      if (err instanceof Error && err.message.toLowerCase().includes('authentication')) {
+        setToken(null);
+      }
     }
   }, []);
 
@@ -122,13 +128,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setAuthLoading(true);
     try {
       const endpoint = authStatus.configured ? '/api/admin/auth/login' : '/api/admin/auth/setup';
-      const res = await fetch(endpoint, {
+      const { data } = await fetchJson<{ token: string }>(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: passcodeInput }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Authentication failed.');
       setToken(data.token);
       setPasscodeInput('');
       setAuthStatus((prev) => (prev ? { ...prev, configured: true } : prev));
@@ -142,22 +146,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleUpdateReservationStatus = async (id: string, status: ReservationStatus) => {
     if (!token) return;
     setActionBanner('');
-    const res = await fetch(`/api/admin/reservations/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status }),
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+      const { data } = await fetchJson<{ reservation: Reservation; rooms?: RoomCategory[] }>(
+        `/api/admin/reservations/${id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
       setReservations((prev) => prev.map((r) => (r.id === id ? data.reservation : r)));
       if (data.rooms) {
         setRooms(data.rooms);
         onRoomsUpdated(data.rooms);
       }
       setActionBanner(`Reservation ${data.reservation.bookingRef} marked as ${status.replace('_', ' ')}.`);
+    } catch (err) {
+      setActionBanner(err instanceof Error ? err.message : 'Failed to update reservation.');
     }
   };
 
@@ -166,19 +174,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const draft = roomDrafts[roomId];
     if (!draft) return;
     setActionBanner('');
-    const res = await fetch(`/api/admin/rooms/${roomId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(draft),
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+      const { data } = await fetchJson<{ room: RoomCategory; rooms: RoomCategory[] }>(
+        `/api/admin/rooms/${roomId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(draft),
+        }
+      );
       setRooms(data.rooms);
       onRoomsUpdated(data.rooms);
       setActionBanner(`Updated ${data.room.name} pricing and availability live.`);
+    } catch (err) {
+      setActionBanner(err instanceof Error ? err.message : 'Failed to update suite.');
     }
   };
 
@@ -186,23 +198,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     if (!token) return;
     setActionBanner('');
-    const res = await fetch('/api/admin/promotions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: promoTitle,
-        code: promoCode,
-        discountPercent: promoDiscount,
-        category: promoCategory,
-        validUntil: promoValidUntil,
-        description: promoDesc,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+      const { data } = await fetchJson<{ promo: SeasonalPromotion }>('/api/admin/promotions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: promoTitle,
+          code: promoCode,
+          discountPercent: promoDiscount,
+          category: promoCategory,
+          validUntil: promoValidUntil,
+          description: promoDesc,
+        }),
+      });
       const nextPromos = [data.promo, ...promotions];
       setPromotions(nextPromos);
       onPromotionsUpdated(nextPromos.filter((p) => p.active));
@@ -210,37 +221,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setPromoCode('');
       setPromoDesc('');
       setActionBanner(`Published "${data.promo.title}" and pushed notification to mobile guests.`);
+    } catch (err) {
+      setActionBanner(err instanceof Error ? err.message : 'Failed to publish promotion.');
     }
   };
 
   const handleDeactivatePromo = async (promoId: string) => {
     if (!token) return;
-    const res = await fetch(`/api/admin/promotions/${promoId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
+    try {
+      await fetchJson<{ ok: boolean }>(`/api/admin/promotions/${promoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const nextPromos = promotions.map((p) => (p.id === promoId ? { ...p, active: false } : p));
       setPromotions(nextPromos);
       onPromotionsUpdated(nextPromos.filter((p) => p.active));
+    } catch (err) {
+      setActionBanner(err instanceof Error ? err.message : 'Failed to deactivate promotion.');
     }
   };
 
   const handleUpdateInquiryStatus = async (inquiryId: string, status: ServiceInquiry['status']) => {
     if (!token) return;
     setActionBanner('');
-    const res = await fetch(`/api/admin/inquiries/${inquiryId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status }),
-    });
-    const data = await res.json();
-    if (res.ok && data.inquiry) {
-      setInquiries((prev) => prev.map((inq) => (inq.id === inquiryId ? data.inquiry : inq)));
-      setActionBanner(`Inquiry ${data.inquiry.reference} marked as ${status}.`);
+    try {
+      const { data } = await fetchJson<{ inquiry: ServiceInquiry }>(`/api/admin/inquiries/${inquiryId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (data.inquiry) {
+        setInquiries((prev) => prev.map((inq) => (inq.id === inquiryId ? data.inquiry : inq)));
+        setActionBanner(`Inquiry ${data.inquiry.reference} marked as ${status}.`);
+      }
+    } catch (err) {
+      setActionBanner(err instanceof Error ? err.message : 'Failed to update inquiry.');
     }
   };
 
